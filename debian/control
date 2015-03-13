@@ -1,5 +1,5 @@
 Source: monitoring-plugins-credativ
-Section: unknown
+Section: net
 Priority: optional
 Maintainer: credativ GmbH <info@credativ.de>
 Uploaders: Patrick Schoenfeld <patrick.schoenfeld@credativ.de>
@@ -10,14 +10,16 @@ Vcs-Browser: https://github.com/credativ/nagios-icinga-checks
 
 Package: monitoring-plugins-credativ
 Architecture: any
-Depends: monitoring-plugins-credativ-openvpn, monitoring-plugins-credativ-puppet
+Depends: monitoring-plugins-credativ-openvpn,
+    monitoring-plugins-credativ-puppet,
+    ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems by credativ
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH.
 
 Package: monitoring-plugins-credativ-openvpn
 Architecture: all
-Depends: python
+Depends: python, ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems (openvpn)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_openvpn'
@@ -25,7 +27,7 @@ Description: Plugins for nagios compatible monitoring systems (openvpn)
 
 Package: monitoring-plugins-credativ-puppet
 Architecture: all
-Depends: python, python-yaml
+Depends: python, python-yaml, ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems (puppet)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_openvpn'
