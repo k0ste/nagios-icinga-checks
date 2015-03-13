@@ -1,0 +1,30 @@
+Source: monitoring-plugins-credativ
+Section: unknown
+Priority: optional
+Maintainer: credativ GmbH <info@credativ.de>
+Uploaders: Patrick Schoenfeld <patrick.schoenfeld@credativ.de>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.5
+Vcs-Git: https://github.com/credativ/nagios-icinga-checks.git
+Vcs-Browser: https://github.com/credativ/nagios-icinga-checks
+
+Package: monitoring-plugins-credativ
+Architecture: any
+Depends: monitoring-plugins-credativ-openvpn, monitoring-plugins-credativ-puppet
+Description: Plugins for nagios compatible monitoring systems by credativ
+ Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ written by employees of the credativ GmbH.
+
+Package: monitoring-plugins-credativ-openvpn
+Architecture: all
+Description: Plugins for nagios compatible monitoring systems (openvpn)
+ Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ written by employees of the credativ GmbH. It contains the 'check_openvpn'
+ plugin.
+
+Package: monitoring-plugins-credativ-puppet
+Architecture: all
+Description: Plugins for nagios compatible monitoring systems (puppet)
+ Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ written by employees of the credativ GmbH. It contains the 'check_openvpn'
+ plugin.
