@@ -30,5 +30,5 @@ Architecture: all
 Depends: python, python-yaml, ${misc:Depends}, ${python:Depends}
 Description: Plugins for nagios compatible monitoring systems (puppet)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
- written by employees of the credativ GmbH. It contains the 'check_openvpn'
+ written by employees of the credativ GmbH. It contains the 'check_puppet'
  plugin.
