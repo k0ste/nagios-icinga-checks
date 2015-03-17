@@ -1,3 +1,9 @@
+monitoring-plugins-credativ (2) unstable; urgency=medium
+
+  * Add plugin check_mailq_multi and adequate binary package for it
+
+ -- Patrick Schoenfeld <patrick.schoenfeld@credativ.de>  Tue, 17 Mar 2015 10:46:56 +0100
+
 monitoring-plugins-credativ (1) unstable; urgency=low
 
   * Initial release
