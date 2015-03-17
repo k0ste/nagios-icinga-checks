@@ -19,7 +19,7 @@ Description: Plugins for nagios compatible monitoring systems by credativ
 
 Package: monitoring-plugins-credativ-openvpn
 Architecture: all
-Depends: python, ${misc:Depends}
+Depends: python, ${misc:Depends}, ${python:Depends}
 Description: Plugins for nagios compatible monitoring systems (openvpn)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_openvpn'
@@ -27,7 +27,7 @@ Description: Plugins for nagios compatible monitoring systems (openvpn)
 
 Package: monitoring-plugins-credativ-puppet
 Architecture: all
-Depends: python, python-yaml, ${misc:Depends}
+Depends: python, python-yaml, ${misc:Depends}, ${python:Depends}
 Description: Plugins for nagios compatible monitoring systems (puppet)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_openvpn'
