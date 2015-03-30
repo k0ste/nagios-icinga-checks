@@ -4,7 +4,7 @@ Source: https://github.com/liquidat/nagios-icinga-checks
 
 Files: check_openvpn check_puppetagent
 Copyright: 2013 Roland Wolters <roland.wolters@credativ.de>
-License: 
+License: Expat
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
  "Software"), to deal in the Software without restriction, including
