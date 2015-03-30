@@ -1,3 +1,11 @@
+monitoring-plugins-credativ (3) UNRELEASED; urgency=medium
+
+  * copyright: Indicate Expat license
+  * Improve compatibility of README.md
+  * add check_systemd
+
+ -- Maximilian Gaß <maximilian.gass@credativ.de>  Mon, 30 Mar 2015 14:29:22 +0200
+
 monitoring-plugins-credativ (2) unstable; urgency=medium
 
   * Add plugin check_mailq_multi and adequate binary package for it
