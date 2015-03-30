@@ -33,3 +33,5 @@ optional arguments:
   -w WARN, --warn WARN  seconds after last Puppet run which issues a warning
   -c CRIT, --crit CRIT  seconds after last Puppet run which are critica
   ```
+  -c CRIT, --crit CRIT  seconds after last Puppet run which are critica  
+```
