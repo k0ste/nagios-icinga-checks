@@ -31,7 +31,15 @@ usage: check_puppetagent [-h] [-w WARN] [-c CRIT]
 optional arguments:
   -h, --help            show this help message and exit
   -w WARN, --warn WARN  seconds after last Puppet run which issues a warning
-  -c CRIT, --crit CRIT  seconds after last Puppet run which are critica
-  ```
   -c CRIT, --crit CRIT  seconds after last Puppet run which are critica  
+```
+
+## How to use check_systemd
+
+The plugin is an NRPE check and needs to be run on the monitoring client. It checks if there are
+any failed systemd units (degraded state). Use it to make sure all services that should be up are actually up.
+
+```
+$ /usr/lib/nagios/plugins/check_systemd
+OK: state is “running”
 ```

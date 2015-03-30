@@ -41,3 +41,11 @@ Description: Plugins for nagios compatible monitoring systems (postfix)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_mailq_multi'
  plugin.
+
+Package: monitoring-plugins-credativ-systemd
+Architecture: all
+Depends: ruby, systemd (>= 215), ${misc:Depends}
+Description: Plugins for nagios compatible monitoring systems (systemd)
+ Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ written by employees of the credativ GmbH. It contains the 'check_systemd'
+ plugin.
