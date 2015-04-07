@@ -13,6 +13,7 @@ Architecture: any
 Depends: monitoring-plugins-credativ-openvpn,
     monitoring-plugins-credativ-puppet,
     monitoring-plugins-credativ-postfix,
+    monitoring-plugins-credativ-systemd,
     ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems by credativ
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
