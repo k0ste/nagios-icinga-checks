@@ -37,7 +37,7 @@ Description: Plugins for nagios compatible monitoring systems (puppet)
 
 Package: monitoring-plugins-credativ-postfix
 Architecture: all
-Depends: python, python-yaml, ${misc:Depends}
+Depends: ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems (postfix)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_mailq_multi'
