@@ -50,3 +50,10 @@ Description: Plugins for nagios compatible monitoring systems (systemd)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_systemd'
  plugin.
+
+Package: monitoring-plugins-credativ-systemd-service
+Architecture: all
+Depends: systemd (>= 215), ${misc:Depends}
+Description: Plugins for nagios compatible monitoring systems (systemd service)
+ Plugins for nagios coompatible monitoring systems like Naemon and Icinga.
+ It contains the 'check_systemd_service' plugin.
