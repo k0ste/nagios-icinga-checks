@@ -1,0 +1,1 @@
+check_systemd_service   usr/lib/nagios/plugins
