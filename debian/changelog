@@ -1,3 +1,10 @@
+monitoring-plugins-credativ (5) unstable; urgency=medium
+
+  [ Sujeevan Vijayakumaran ]
+  * Fix package of monitoring-plugins-credativ-systemd-service
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Mon, 08 Jun 2018 09:42:19 +0200
+
 monitoring-plugins-credativ (4) unstable; urgency=medium
 
   [ Sujeevan Vijayakumaran ]
