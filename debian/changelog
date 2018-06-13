@@ -1,9 +1,16 @@
+monitoring-plugins-credativ (6) unstable; urgency=medium
+
+  [ Sujeevan Vijayakumaran ]
+  * Add syslog_count script
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 13 Jun 2018 11:34:04 +0200
+
 monitoring-plugins-credativ (5) unstable; urgency=medium
 
   [ Sujeevan Vijayakumaran ]
   * Fix package of monitoring-plugins-credativ-systemd-service
 
- -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Mon, 08 Jun 2018 09:42:19 +0200
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Mon, 11 Jun 2018 09:42:19 +0200
 
 monitoring-plugins-credativ (4) unstable; urgency=medium
 
