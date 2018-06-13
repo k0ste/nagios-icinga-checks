@@ -34,7 +34,7 @@ sub usage() {
   schnell die passenden Werte zu finden.
   
   Aufruf:
-  syslog_count <Optionen>
+  check_logfile_count <Optionen>
   
   -f <config-file>         Konfigurationsdatei
   -s <syslog-file>         ueberwachte Syslog-Datei (" . $cfg->{'syslogfile'} . ")

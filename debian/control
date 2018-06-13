@@ -58,9 +58,9 @@ Description: Plugins for nagios compatible monitoring systems (systemd service)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga.
  It contains the 'check_systemd_service' plugin.
 
-Package: monitoring-plugins-credativ-syslog-count
+Package: monitoring-plugins-credativ-logfile-count
 Architecture: all
 Depends: perl, ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems (syslog count)
  Plugins for nagios coompatible monitoring systems like Naemon and Icinga.
- It contains the 'syslog-count' plugin.
+ It contains the 'check_logfile_count' plugin.
