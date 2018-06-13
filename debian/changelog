@@ -1,3 +1,9 @@
+monitoring-plugins-credativ (6.2) unstable; urgency=medium
+
+  * Fix name of dependency in the meta-package
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 13 Jun 2018 13:48:31 +0200
+
 monitoring-plugins-credativ (6.1) unstable; urgency=medium
 
   * Change name of syslog_count to check_logfile_count for consistency
