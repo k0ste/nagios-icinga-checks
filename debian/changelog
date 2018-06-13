@@ -1,3 +1,10 @@
+monitoring-plugins-credativ (6.1) unstable; urgency=medium
+
+  * Change name of syslog_count to check_logfile_count for consistency
+  * Add systemd-service and logfile-count as dependency for meta-package
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 13 Jun 2018 13:32:07 +0200
+
 monitoring-plugins-credativ (6) unstable; urgency=medium
 
   [ Sujeevan Vijayakumaran ]
