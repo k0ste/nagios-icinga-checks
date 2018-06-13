@@ -1,0 +1,472 @@
+#!/usr/bin/perl -w
+
+use Getopt::Std;
+use POSIX qw(strftime);
+use Time::Local;
+use Data::Dumper;
+use strict;
+use warnings;
+
+our $cfg = {
+  'configfile'   => "",
+  'debug'        => 0,
+  'syslogfile'   => '/var/log/syslog',
+  'patterns'     => '.',                 # mit , getrennt
+  'messages'     => '',                  # mit , getrennt - Anzahl gleich patterns
+  'warns'        => '0',                 # mit , getrennt - Anzahl gleich patterns
+  'crits'        => '0',                 # mit , getrennt - Anzahl gleich patterns
+  'group'        => 'adm',
+  'now'          => time,
+  'interval'     => 300,
+  'all'          => 0,                   # ganzes Logfile wird verarbeitet
+  'norminterval' => 60, };
+
+our @rccodes = qw/OK WARN CRIT UNKNOWN/;
+
+#---------------------------------------------------------------------
+sub usage() {
+  print "
+  Nagios-Plugin zaehlt ausgewaehlte Eintraege in einem Syslog-File im 
+  letzten Intervall. Dabei wird immer das letzte abgeschlossene Intervall 
+  beruecksichtigt. 
+  Das Syslog-File muss fuer den Nagios-User lesbar sein.
+  Das Skript ist dahingehend optimiert auch in grossen Logfiles
+  schnell die passenden Werte zu finden.
+  
+  Aufruf:
+  syslog_count <Optionen>
+  
+  -f <config-file>         Konfigurationsdatei
+  -s <syslog-file>         ueberwachte Syslog-Datei (" . $cfg->{'syslogfile'} . ")
+  -i <interval>            zu betrachtendes Intervall in Sekunden (" . $cfg->{'interval'} . ")
+  -n <norminterval>        Intervall in Sekunden fuer die Normierung der Anzahl (" . $cfg->{'norminterval'} . ")
+  -p <patterns>            auszuwertende Muster (mit , getrennt) (" . $cfg->{'patterns'} . ")
+  -m <messages>            Kurzbeschreibung fuer Muster (mit , getrennt) (" . $cfg->{'patterns'} . ")
+                           Die Anzahl der Eintraege muss gleich denen der Muster oder 0 sein
+  -w <warns>               normierte Nachrichtenzahl ausserhalb des Intervalls wird als Warnung bewertet
+                           Angabe min:max oder max
+                           bei mehreren Mustern mit , getrennt
+                           Die Anzahl der Eintraege muss gleich denen der Muster oder 1 sein
+                           (" . $cfg->{'warns'} . ")
+  -c <crits>               normierte Nachrichtenzahl ausserhalb des Intervalls wird als Critical bewertet
+                           Angabe min:max oder max
+                           bei mehreren Mustern mit , getrennt
+                           Die Anzahl der Eintraege muss gleich denen der Muster oder 1 sein
+                           (" . $cfg->{'crits'} . ")
+  -l <logfile>             Log-File
+  -F <write-config-file>   Konfigurationsdatei schreiben
+  -t <syslogtime>          Bezugszeit im Syslog-Format oder YYYY-MM-DD HH:MM:SS (Default: aktuelle Zeit)                            
+  -a                       ganzes Logfile wird ohne Fehlermeldung verarbeitet.
+  -h                       Dieser Text
+";
+  exit 3;
+}
+
+# ---------------------------------------------------------------------
+sub state2rc {
+  my $errst = shift;
+  my $i;
+  for ($i = 0 ; $i < @rccodes and $errst !~ /^$rccodes[$i]/ ; $i++) { }
+  return $i;
+}
+
+# ---------------------------------------------------------------------
+sub exitwithmsg {
+  my ($msg) = shift || "UNKNOWN: keine Meldung";
+  my $rc = 0;
+  foreach my $type (qw/OK WARN CRIT UNKNOWN /) {
+    if ($msg =~ /^$type/i) {
+      print "$msg\n";
+      exit $rc;
+    }
+    $rc++;
+  }
+  print $msg;
+  exit 0;
+}
+
+# ---------------------------------------------------------------------
+sub read_config_file($) {
+  my ($file)=@_;
+  my $href={};
+  my $fh;
+  open $fh, "<", $file or return $href;
+  while (my $line = <$fh>) {
+    if ($line =~ /^([\w-]+)\s*=\s*([^\r\n]*)/) {
+      my ($key, $value) = ($1, $2);
+      $value =~ s/\s*$//;
+      $href->{$key} = $value;
+    }
+  }
+  close $fh;
+  return $href;
+}
+
+# ---------------------------------------------------------------------
+sub readcommandline($) {
+  my $cfg = shift;
+  my %opts;
+  getopts('f:F:s:i:n:p:m:w:l:c:t:ag:dh', \%opts);
+  usage if $opts{'h'};
+  if ($opts{'f'}) {
+    -r $opts{'f'} or exitwithmsg "Warning: Kann Konfigurationsfile " . $opts{'f'} . " nicht lesen";
+    my $filecfg = read_config_file($opts{'f'});
+    foreach my $key (keys %$filecfg) {
+      $cfg->{$key} = $filecfg->{$key} if defined $cfg->{$key};
+    }
+  }
+  $cfg->{'debug'}        = $opts{'d'} if $opts{'d'};
+  $cfg->{'syslogfile'}   = $opts{'s'} if $opts{'s'};
+  $cfg->{'interval'}     = $opts{'i'} if $opts{'i'};
+  $cfg->{'norminterval'} = $opts{'n'} if $opts{'n'};
+  $cfg->{'patterns'}     = $opts{'p'} if $opts{'p'};
+  $cfg->{'messages'}     = $opts{'m'} if $opts{'m'};
+  $cfg->{'warns'}        = $opts{'w'} if $opts{'w'};
+  $cfg->{'crits'}        = $opts{'c'} if $opts{'c'};
+  $cfg->{'logfile'}      = $opts{'l'} if $opts{'l'};
+  $cfg->{'group'}        = $opts{'g'} if $opts{'g'};
+  $cfg->{'all'}          = 1          if $opts{'a'};
+  writeconfig($cfg, $opts{'F'}) if ($opts{'F'});
+  my $gid = getgrnam($cfg->{'group'});
+  $) = $gid if $gid;
+  my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($cfg->{'now'});
+  $cfg->{'year'} = $year;
+  # Initialisierungen fuer Plausibilitaetschecks
+  if ($opts{'t'}) {
+    my $time = syslogtime2time($cfg, $opts{'t'});
+    exitwithmsg "$opts{t} wurde als Syslogzeit nicht erkannt" unless $time;
+    $cfg->{'now'} = $time;
+    ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = localtime($cfg->{'now'});
+    $cfg->{'year'} = $year;
+  }
+}
+
+# ---------------------------------------------------------------------
+sub writeconfig($$) {
+  my ($cfg, $file) = @_;
+  open OUT, ">", $file or exitwithmsg "Warning: kann $file nicht schreiben";
+  foreach my $key (keys %$cfg) {
+    print OUT "$key = " . $cfg->{$key} . "\n" if $key !~ /^(year|now|configfile)$/;
+  }
+  close OUT;
+  exitwithmsg "OK: Konfigurationsfile $file geschrieben";
+}
+
+# ---------------------------------------------------------------------
+sub monthname2int($) {
+  my $monthname = shift;
+  my %months    = (
+    "Jan"  => 1,
+    "Feb"  => 2,
+    "Mar"  => 3,
+    "Apr"  => 4,
+    "May"  => 5,
+    "Jun"  => 6,
+    "Jul"  => 7,
+    "Aug"  => 8,
+    "Sep"  => 9,
+    "Oct"  => 10,
+    "Nov"  => 11,
+    "Dec"  => 12,
+    "Mär" => 3,
+    "Mai"  => 5,
+    "Okt"  => 10,
+    "Dez"  => 12);
+  return $months{$monthname} if $months{$monthname};
+  return 0;
+}
+
+# ---------------------------------------------------------------------
+sub syslogtime($) {
+  my $time = shift || time;
+  strftime('%b %d %H:%M:%S', localtime $time);
+}
+
+# ---------------------------------------------------------------------
+sub syslogtime2time($$) {
+  my ($cfg, $timest) = @_;
+  my $time = 0;
+  if ($timest =~ /(\w\w\w)\s+(\d+) (\d\d):(\d\d):(\d\d)\S*/) {
+    my ($month, $mday, $hour, $min, $sec) = (monthname2int($1) - 1, $2, $3, $4, $5);
+    $mday =~ s/^0//;
+    $hour =~ s/^0//;
+    $min  =~ s/^0//;
+    $sec  =~ s/^0//;
+    $time = timelocal($sec, $min, $hour, $mday, $month, $cfg->{'year'});
+    if ($time > $cfg->{'now'} + 45 * 86400) {
+      # Zeitstempel liegt mehr als 45 Tage in der Zukunft
+      $time = timelocal($sec, $min, $hour, $mday, $month, $cfg->{'year'} - 1);
+    }
+  } elsif ($timest =~ /(\d+)-(\d+)-(\d+)\s+(\d\d):(\d\d):(\d\d)\s/) {
+    my ($year, $month, $mday, $hour, $min, $sec) = ($1, monthname2int($2) - 1, $3, $4, $5, $6);
+    $mday =~ s/^0+//;
+    $hour =~ s/^0+//;
+    $min  =~ s/^0+//;
+    $sec  =~ s/^0+//;
+    return 0 if $month < 0;
+    $time = timelocal($sec, $min, $hour, $mday, $month, $cfg->{'year'});
+    if ($time > $cfg->{'now'} + 45 * 86400) {
+      # Zeitstempel liegt mehr als 45 Tage in der Zukunft
+      $time = timelocal($sec, $min, $hour, $mday, $month, $cfg->{'year'} - 1);
+    }
+  }
+  return $time if $time;
+  exitwithmsg "Abbruch - ungueltige Zeit: $timest";
+}
+
+# ---------------------------------------------------------------------
+# Vergleich 2 Syslog-Zeiten gegeneinander wie cmp
+sub cmpsyslogtime($$$) {
+  my ($cfg, $timest1, $timest2) = @_;
+  my $time1 = syslogtime2time $cfg, $timest1;
+  my $time2 = syslogtime2time $cfg, $timest2;
+  return undef unless $time1 and $time2;
+  return -1 if $time1 < $time2;
+  return 0  if $time1 == $time2;
+  return 1;
+}
+
+# ---------------------------------------------------------------------
+sub getfilesize($) {
+  my ($f) = @_;
+  my ($dev, $ino, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($f);
+  return $size;
+}
+
+# ---------------------------------------------------------------------
+# Findet die Position der 1. Syslog-Zeile, die sich hinter oder auf $intervalstart befindet
+# Der Positionszeiger muss sich beim Start an einem Zeilenanfang befinden
+# Die Suche beginnt von der Start-Position nach vorn
+sub seekfirstline($$$) {
+  my ($cfg, $fh, $searchtime) = @_;
+  my $start = tell $fh;
+  my $end   = getfilesize($fh);
+  $start = 0 if $start > $end;
+  my $line      = <$fh>;
+  my $starttime = syslogtime2time($cfg, $line);
+  my $linetime  = $starttime;
+  my $steps     = 0;
+  # Binaere Suche, solange der Abstand zwischen Start und Ende gross genug ist
+  while ($start + 5000 < $end and $starttime and $starttime < $searchtime) {
+    $steps++;
+    # intervalsearchtime > aktuelle Zeile -> gehe um die Haelfte vor
+    seek $fh, int($start + ($end - $start) / 2), 0;
+    # gehe zum naechsten Zeilenanfang
+    $line = <$fh>;
+    my $newpos = tell $fh;
+    $line = <$fh>;
+    $linetime = syslogtime2time($cfg, $line);
+    my $h = $linetime < $searchtime ? 1 : 0;
+    if ($linetime < $searchtime) {
+      $start     = $newpos;
+      $starttime = $linetime;
+    } else {
+      $end = $newpos;
+    }
+  }
+  seek $fh, $start, 0;
+  # zeilenweise Suche
+  $linetime = $starttime;
+  while ($linetime and $linetime < $searchtime and ($line = <$fh>)) {
+    $steps++;
+    $linetime = syslogtime2time($cfg, $line);
+    if ($linetime < $searchtime) {
+      $start     = tell $fh;
+      $starttime = $linetime;
+    }
+    my $h = $linetime < $searchtime ? 1 : 0;
+  }
+  seek $fh, $start, 0;
+  return $start;
+}
+
+# ---------------------------------------------------------------------
+# Intialisierung der Limits je Typ (warn oder crit)
+sub setlimits($$$$) {
+  my ($href, $type, $st, $count) = @_;
+  my @list = split /,/, $st;
+  @list = (@list) x $count if @list == 1;
+  for (my $i = 0 ; $i < @list ; $i++) {
+    if ($list[$i] =~ /^\d+$/) {
+      $href->[$i]{$type}{'min'} = 0;
+      $href->[$i]{$type}{'max'} = $list[$i];
+    } elsif ($list[$i] =~ /^(\d+):(\d+)$/) {
+      $href->[$i]{$type}{'min'} = $1;
+      $href->[$i]{$type}{'max'} = $2;
+    } else {
+      exitwithmsg "Warning: " . $type . "list ausserhalb des Breiches: " . $list[$i];
+    }
+  }
+}
+
+# ---------------------------------------------------------------------
+sub writelogfile($$$$) {
+  my ($cfg, $countersaref, $messagesaref, $end) = @_;
+  my $fh;
+  my $endst = strftime("%Y-%m-%d %H:%M:%S", localtime $end);
+  if (open $fh, "<", $cfg->{'logfile'}) {
+    my $lastline = "";
+    my $size     = getfilesize $fh;
+    seek $fh, $size - 200, 0 if $size > 200;
+    while (my $line = <$fh>) {
+      $lastline = $line;
+    }
+    close $fh;
+    # Zeile schon bekannt, wenn letzte Zeile groesser
+    return 1 unless ($endst cmp $lastline) == 1;
+  }
+  open($fh, ">>", $cfg->{'logfile'}) or return 0;
+  if (!getfilesize $fh) {
+    print $fh join("\t", "Time", @$messagesaref), "\n";
+    print join("\t", "Time", @$messagesaref), "\n" if $cfg->{'all'};
+  }
+  print $fh join("\t", strftime("%Y-%m-%d %H:%M:%S", localtime $end), @$countersaref), "\n";
+  print join("\t", strftime("%Y-%m-%d %H:%M:%S", localtime $end), @$countersaref), "\n" if $cfg->{'all'};
+  close $fh;
+}
+
+# ---------------------------------------------------------------------
+# Initialisiert die Pattern Arrays
+sub initpatterns($$$$$) {
+  my ($cfg, $patternaref, $messagearef, $regexaref, $masterpatternref) = @_;
+  @$patternaref = split /,/, $cfg->{'patterns'};
+  @$messagearef = split /,/, $cfg->{'messages'};
+  @$regexaref   = ();
+  if ($#$patternaref != $#$messagearef) {
+    if (@$messagearef > 1) {
+      print "Warning: Anzahl der Messages-Felder ungleich den in der Musterliste";
+    } else {
+      @$messagearef = @$patternaref;
+    }
+  }
+  foreach my $pattern (@$patternaref) {
+    push @$regexaref, qr/$pattern/;
+  }
+  $$masterpatternref = "(" . join("|", @$patternaref) . ")";
+  $$masterpatternref = qr/$$masterpatternref/;
+}
+
+# ---------------------------------------------------------------------
+sub processline($$$$) {
+  my ($line, $masterpattern, $regexaref, $counteraref) = @_;
+  if ($line =~ $masterpattern) {
+    for (my $i = 0 ; $i < @$regexaref ; $i++) {
+      if ($line =~ $regexaref->[$i]) {
+        $counteraref->[$i]++;
+        last;
+      }
+    }
+  }
+}
+
+# ---------------------------------------------------------------------
+# Normalisierung der Counter-Liste
+sub normalizecounters($$) {
+  my ($cfg, $counteraref) = @_;
+  for (my $i = 0 ; $i < @$counteraref ; $i++) {
+    $counteraref->[$i] = int($counteraref->[$i] * $cfg->{'norminterval'} / $cfg->{'interval'});
+  }
+}
+
+# ---------------------------------------------------------------------
+sub analyzecounters($$$$) {
+  my ($cfg, $messagearef, $counteraref, $limits) = @_;
+  # Fehleranalyse
+  my $critst = "";
+  my $warnst = "";
+  my $okst   = "";
+  for (my $i = 0 ; $i < @$messagearef ; $i++) {
+    if ($limits->[$i]{'crit'}{'max'} and ($counteraref->[$i] > $limits->[$i]{'crit'}{'max'} or $counteraref->[$i] < $limits->[$i]{'crit'}{'min'})) {
+      $critst .= ", " if $critst;
+      $critst .= $messagearef->[$i] . ": " . $counteraref->[$i];
+    } elsif ($limits->[$i]{'warn'}{'max'} and ($counteraref->[$i] > $limits->[$i]{'warn'}{'max'} or $counteraref->[$i] < $limits->[$i]{'warn'}{'min'})) {
+      $warnst .= ", " if $warnst;
+      $warnst .= $messagearef->[$i] . ": " . $counteraref->[$i];
+    } else {
+      $okst .= ", " if $okst;
+      $okst .= $messagearef->[$i] . ": " . $counteraref->[$i];
+    }
+  }
+  # Ausgabe
+  my $output = "";
+  $output .= "CRITICAL: $critst" if $critst;
+  $output .= "; "                if $output;
+  $output .= "Warning: $warnst"  if $warnst;
+  $output .= "; "                if $output;
+  $output .= "OK: $okst"         if $okst;
+  return $output;
+}
+
+# ---------------------------------------------------------------------
+sub countforinterval($) {
+  my ($cfg) = @_;
+  my (@patterns, @messages, @regexs, $masterpattern);
+  initpatterns($cfg, \@patterns, \@messages, \@regexs, \$masterpattern);
+  # Intialisierung der Limits
+  my $limits = [];
+  setlimits($limits, "warn", $cfg->{'warns'}, scalar @patterns);
+  setlimits($limits, "crit", $cfg->{'crits'}, scalar @patterns);
+  my @counters = (0) x @patterns;
+  # Verarbeiten des Logfiles
+  my $fh;
+  open($fh, "<", $cfg->{'syslogfile'}) or exitwithmsg "Unknown: Kann " . $cfg->{'syslogfile'} . " nicht lesen";
+  # Start- und Endzeitpunkt des Intervalls berechnen
+  my $end     = int($cfg->{'now'} / $cfg->{'interval'}) * $cfg->{'interval'};
+  my $endst   = syslogtime $end;
+  my $start   = $end - $cfg->{'interval'};
+  my $startst = syslogtime $start;
+  seekfirstline($cfg, $fh, $start) or exitwithmsg "Warning: Logfile enthaelt keine Eintrag nach $startst";
+  my $line;
+  while (defined $fh and ($line = <$fh>) and (syslogtime2time($cfg, $line) < $end)) {
+    processline($line, $masterpattern, \@regexs, \@counters);
+  }
+  close $fh;
+  normalizecounters($cfg, \@counters);
+  # Log-File schreiben
+  writelogfile($cfg, \@counters, \@messages, $end) or exitwithmsg "Kann " . $cfg->{'logfile'} . " nicht schreiben";
+  exitwithmsg analyzecounters($cfg, \@messages, \@counters, $limits);
+}
+
+# ---------------------------------------------------------------------
+sub countforlogfile($) {
+  my ($cfg) = @_;
+  exitwithmsg "Es wurde keine Logfile angegeben" unless $cfg->{'logfile'};
+  my (@patterns, @messages, @regexs, $masterpattern);
+  initpatterns($cfg, \@patterns, \@messages, \@regexs, \$masterpattern);
+  my @counters = (0) x @patterns;
+  # Verarbeiten des Logfiles
+  my $fh;
+  open($fh, "<", $cfg->{'syslogfile'}) or exitwithmsg "Unknown: Kann " . $cfg->{'syslogfile'} . " nicht lesen";
+  # Start- und Endzeitpunkt des Intervalls berechnen
+  my $line = <$fh>;
+  my $start = syslogtime2time $cfg, $line;
+  exitwithmsg $cfg->{'logfile'} . " nicht im Syslog-Format" unless $start;
+  $start = int($start / $cfg->{'interval'}) * $cfg->{'interval'};
+  my $end = $start + $cfg->{'interval'};
+  seek $fh, 0, 0;
+  while ($line = <$fh>) {
+
+    if (syslogtime2time($cfg, $line) >= $end) {
+      # Intervall abgeschlossen
+      normalizecounters($cfg, \@counters);
+      # Log-File schreiben
+      writelogfile($cfg, \@counters, \@messages, $end) or exitwithmsg "Kann " . $cfg->{'logfile'} . " nicht schreiben";
+      @counters = (0) x @patterns;
+      $start += $cfg->{'interval'};
+      $end   += $cfg->{'interval'};
+    }
+    processline($line, $masterpattern, \@regexs, \@counters);
+  }
+  close $fh;
+}
+
+# ---------------------------------------------------------------------
+# Hauptprogramm
+{
+  readcommandline($cfg);
+  if ($cfg->{'all'}) {
+    countforlogfile($cfg);
+  } else {
+    countforinterval($cfg);
+  }
+}
