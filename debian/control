@@ -15,7 +15,7 @@ Depends: monitoring-plugins-credativ-openvpn,
     monitoring-plugins-credativ-postfix,
     monitoring-plugins-credativ-systemd,
     monitoring-plugins-credativ-systemd-service,
-    monitoring-plugins-credativ-systemd-logfile-count,
+    monitoring-plugins-credativ-logfile-count,
     ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems by credativ
  Plugins for nagios compatible monitoring systems like Naemon and Icinga,
