@@ -1,3 +1,9 @@
+monitoring-plugins-credativ (6.3) unstable; urgency=medium
+
+  * Fix error in check_systemd_service which always return code 0
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 18 Jul 2018 15:53:48 +0200
+
 monitoring-plugins-credativ (6.2) unstable; urgency=medium
 
   * Fix name of dependency in the meta-package
