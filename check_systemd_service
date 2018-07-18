@@ -15,6 +15,9 @@
 # this program. If not, see <http://www.gnu.org/licenses/>.
 
 
+PLUGINDIR=$(dirname $0)
+. $PLUGINDIR/utils.sh
+
 if [[ $# -ne 1 ]]; then
     echo "Usage: ${0##*/} <service name>"
     exit $STATE_UNKNOWN
