@@ -14,16 +14,18 @@ Depends: monitoring-plugins-credativ-openvpn,
     monitoring-plugins-credativ-puppet,
     monitoring-plugins-credativ-postfix,
     monitoring-plugins-credativ-systemd,
+    monitoring-plugins-credativ-systemd-service,
+    monitoring-plugins-credativ-logfile-count,
     ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems by credativ
- Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH.
 
 Package: monitoring-plugins-credativ-openvpn
 Architecture: all
 Depends: python, ${misc:Depends}, ${python:Depends}
 Description: Plugins for nagios compatible monitoring systems (openvpn)
- Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_openvpn'
  plugin.
 
@@ -31,7 +33,7 @@ Package: monitoring-plugins-credativ-puppet
 Architecture: all
 Depends: python, python-yaml, ${misc:Depends}, ${python:Depends}
 Description: Plugins for nagios compatible monitoring systems (puppet)
- Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_puppet'
  plugin.
 
@@ -39,7 +41,7 @@ Package: monitoring-plugins-credativ-postfix
 Architecture: all
 Depends: ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems (postfix)
- Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_mailq_multi'
  plugin.
 
@@ -47,6 +49,20 @@ Package: monitoring-plugins-credativ-systemd
 Architecture: all
 Depends: ruby, systemd (>= 215), ${misc:Depends}
 Description: Plugins for nagios compatible monitoring systems (systemd)
- Plugins for nagios coompatible monitoring systems like Naemon and Icinga,
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga,
  written by employees of the credativ GmbH. It contains the 'check_systemd'
  plugin.
+
+Package: monitoring-plugins-credativ-systemd-service
+Architecture: all
+Depends: systemd (>= 215), ${misc:Depends}
+Description: Plugins for nagios compatible monitoring systems (systemd service)
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga.
+ It contains the 'check_systemd_service' plugin.
+
+Package: monitoring-plugins-credativ-logfile-count
+Architecture: all
+Depends: perl, ${misc:Depends}
+Description: Plugins for nagios compatible monitoring systems (syslog count)
+ Plugins for nagios compatible monitoring systems like Naemon and Icinga.
+ It contains the 'check_logfile_count' plugin.

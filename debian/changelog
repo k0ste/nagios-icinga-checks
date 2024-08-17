@@ -1,3 +1,44 @@
+monitoring-plugins-credativ (6.3) unstable; urgency=medium
+
+  * Fix error in check_systemd_service which always return code 0
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 18 Jul 2018 15:53:48 +0200
+
+monitoring-plugins-credativ (6.2) unstable; urgency=medium
+
+  * Fix name of dependency in the meta-package
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 13 Jun 2018 13:48:31 +0200
+
+monitoring-plugins-credativ (6.1) unstable; urgency=medium
+
+  * Change name of syslog_count to check_logfile_count for consistency
+  * Add systemd-service and logfile-count as dependency for meta-package
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 13 Jun 2018 13:32:07 +0200
+
+monitoring-plugins-credativ (6) unstable; urgency=medium
+
+  [ Sujeevan Vijayakumaran ]
+  * Add syslog_count script
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Wed, 13 Jun 2018 11:34:04 +0200
+
+monitoring-plugins-credativ (5) unstable; urgency=medium
+
+  [ Sujeevan Vijayakumaran ]
+  * Fix package of monitoring-plugins-credativ-systemd-service
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Mon, 11 Jun 2018 09:42:19 +0200
+
+monitoring-plugins-credativ (4) unstable; urgency=medium
+
+  [ Sujeevan Vijayakumaran ]
+  * Change warning to unknown if puppet summary file is modified in the future
+  * Add check_systemd_service to package
+
+ -- Sujeevan Vijayakumaran <sujeevan.vijayakumaran@credativ.de>  Fri, 08 Jun 2018 12:51:47 +0200
+
 monitoring-plugins-credativ (3) unstable; urgency=medium
 
   [ Maximilian Gaß ]

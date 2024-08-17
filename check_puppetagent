@@ -119,7 +119,7 @@ def main():
     lastrun = 'Puppet was last run %s' % time_prettyfy(diff_sec)
 
     if lastruntime > now:
-        warning('Puppet summary file modified in the future!')
+        unknown('Puppet summary file modified in the future!')
     elif diff_sec > crit_seconds:
         critical(lastrun)
     elif diff_sec > warn_seconds:
